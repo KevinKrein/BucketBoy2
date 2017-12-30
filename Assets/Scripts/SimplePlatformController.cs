@@ -12,6 +12,10 @@ public class SimplePlatformController : MonoBehaviour {
     public float jumpForce = 1000f;
     public Transform groundCheck;
 
+	private bool hasRed = false;
+	private bool hasBlue = false;
+	private bool hasYellow = false;
+	private bool canJump = false;
 
     private bool grounded = false;
     private Animator anim;
@@ -28,9 +32,13 @@ public class SimplePlatformController : MonoBehaviour {
 	void Update () {
         grounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));
 
-        if(Input.GetButtonDown("Jump") && grounded)
+
+		if(Input.GetButtonDown("Jump") && (grounded || canJump))
         {
             jump = true;
+			if (canJump || hasBlue) {
+				canJump = false;
+			}
         }
 	}
 
@@ -39,6 +47,11 @@ public class SimplePlatformController : MonoBehaviour {
         float h = Input.GetAxis("Horizontal");
 
         anim.SetFloat("Speed", Mathf.Abs(h));
+		if (hasRed) {
+			maxSpeed = 15f;
+		} else {
+			maxSpeed = 5f;
+		}
 
         if(h * rb2d.velocity.x < maxSpeed)
         {
@@ -59,6 +72,9 @@ public class SimplePlatformController : MonoBehaviour {
             anim.SetTrigger("Jump");
             rb2d.AddForce(new Vector2(0f, jumpForce));
             jump = false;
+			if (hasBlue) {
+				canJump = true;
+			}
         }
 
     }
@@ -70,4 +86,25 @@ public class SimplePlatformController : MonoBehaviour {
         theScale.x *= -1;
         transform.localScale = theScale;
     }
+
+	void OnTriggerEnter2D(Collider2D other)
+	{
+		if (other.gameObject.CompareTag("redBucket"))
+		{
+			hasRed = true;
+		}
+		else if (other.gameObject.CompareTag("blueBucket"))
+		{
+			hasRed = false;
+			hasYellow = false;
+			hasBlue = true;
+		}
+		else if (other.gameObject.CompareTag("yellowBucket"))
+		{
+			hasRed = false;
+			hasBlue = false;
+			hasYellow = true;
+		}
+	}
+		
 }
